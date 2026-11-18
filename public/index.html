@@ -1432,7 +1432,7 @@ function renderChat() {
   $('#msgs').scrollTop = 1e9;
   $('#chips').innerHTML = hist.length ? '' : chipsFor(chatWith).map(t => `<button class="chip" type="button">${esc(t)}</button>`).join('');
   const eng = chatEngine(), n = $('#cnote');
-  if (eng === 'grok' && !bossToken.get()) n.innerHTML = '实时模式由 Grok 回复，只有老板能用。请输入老板密钥（管理员 Token），只保存在这个浏览器分页里。<input id="bossKey" type="password" autocomplete="off" placeholder="cx_…">';
+  if (eng === 'grok') n.textContent = '由 Grok（COO）回复，直接输入即可对话。';
   else if (eng === 'grok') n.innerHTML = '由 Grok 回复 · <a href="#" id="bossOut" style="color:inherit">退出老板身份</a>';
   else if (eng === 'claude') n.textContent = '由 Claude 扮演这位成员回复（预览版）。部署到 Render 并设置 XAI_API_KEY 后改由 Grok 回复。';
   else n.textContent = live ? '正在连接对话服务…' : '这个页面暂时不能对话：部署到 Render 并设置 XAI_API_KEY 后即可使用。';
@@ -1450,7 +1450,7 @@ async function sendChat(text) {
   await getSample();
   const eng = chatEngine();
   if (!eng) { renderChat(); return; }
-  if (eng === 'grok' && !bossToken.get()) { renderChat(); return; }
+  if (eng === 'grok') {
   const id = chatWith, b = bots.get(id); if (!b) return;
   const hist = chats[id] = (chats[id] || []).filter(m => !m.err);
   hist.push({ role: 'user', content: text }); if (hist.length > 40) hist.splice(0, hist.length - 40);
@@ -1464,7 +1464,7 @@ async function sendChat(text) {
   let reply = '', err = '';
   try {
     if (eng === 'grok') {
-      const r = await fetch('api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + bossToken.get() }, body: JSON.stringify({ bot: id, messages: msgs }) });
+      const r = await fetch('api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bot: id, messages: msgs }) });
       const j = await r.json().catch(() => ({}));
       if (r.status === 401 || r.status === 403) { bossToken.set(''); err = '老板密钥不正确，请重新输入。'; }
       else if (!r.ok) err = j.error || ('回复失败（' + r.status + '）');
@@ -1587,10 +1587,4 @@ setNight(hourKL >= 19 || hourKL < 7);
 tickClock(); animate();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { drawStatic(); drawCourt(); drawCooBoard(); drawBTC(); });
 setTimeout(() => $('#loading').classList.add('off'), 300);
-setInterval(demoBtcTick, 4000); demoBtcTick();
-connect().then(ok => { if (!ok) live = false; setMode(); });
-}
-})();
-</script>
-</body>
-</html>
+setInterval(de

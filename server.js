@@ -71,9 +71,9 @@ app.post('/api/chat', async (req, res) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'grok-beta',
+        model: 'grok-3',
         messages: [
-          { role: 'system', content: `你是 Connext Media AI 办公室的成员，正在和老板 Eldon 对话。保持简洁、专业、有帮助。` },
+          { role: 'system', content: `你是 Connext Media 的 COO Grok，负责调度整个 AI 带货影片团队。老板是 Eldon。你可以直接回答工作安排、进度、提案等问题，语气简洁专业。` },
           ...messages
         ],
         temperature: 0.7,
