@@ -555,7 +555,7 @@ select.b option{background:#1d2026}
 const $ = s => document.querySelector(s);
 function fail(msg) { $('#loading').classList.add('off'); $('#errMsg').textContent = msg; $('#err').classList.add('on'); }
 if (!window.THREE || !THREE.OrbitControls) { fail('Three.js 载入失败，请检查网络后刷新。'); return; }
-try { main(); } catch (e) { console.error(e); fail('初始化出错：' + e.message); }
+try { main(); } catch (e) { console.error(e); fail('初始化出错：' + (e.message || e)); }
 
 function main() {
 // ======================= 基础数据 =======================
