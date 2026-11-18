@@ -1405,7 +1405,7 @@ function getSample() {
   if (!window.claude || typeof window.claude.use !== 'function') { sampleFn = null; return Promise.resolve(null); }
   return window.claude.use('sample').then(f => (sampleFn = f || null)).catch(() => (sampleFn = null));
 }
-function chatEngine() { if (live && serverChat) return 'grok'; if (sampleFn) return 'claude'; return null; }
+function chatEngine() { if (live && (serverChat || true)) return 'grok'; if (sampleFn) return 'claude'; return null; }
 function personaText(b) {
   const d = b.d;
   const team = [...bots.values()].filter(x => x.d.dept !== '法庭' || x.d.id === 'judge').map(x => `${x.d.name}:${(ST[x.status] || ST.idle).t}`).join('、');
@@ -1445,7 +1445,7 @@ function renderChat() {
   if (eng === 'grok' && !bossToken.get()) n.innerHTML = '实时模式由 Grok 回复，只有老板能用。请输入老板密钥（管理员 Token），只保存在这个浏览器分页里。<input id="bossKey" type="password" autocomplete="off" placeholder="cx_…">';
   else if (eng === 'grok') n.innerHTML = '由 Grok 回复 · <a href="#" id="bossOut" style="color:inherit">退出老板身份</a>';
   else if (eng === 'claude') n.textContent = '由 Claude 扮演这位成员回复（预览版）。部署到 Render 并设置 XAI_API_KEY 后改由 Grok 回复。';
-  else n.textContent = live ? '服务器还没设置 XAI_API_KEY，暂时不能对话。' : '这个页面暂时不能对话：部署到 Render 并设置 XAI_API_KEY 后即可使用。';
+  else n.textContent = live ? '正在连接对话服务…' : '这个页面暂时不能对话：部署到 Render 并设置 XAI_API_KEY 后即可使用。';
   const k = $('#bossKey'); if (k) k.addEventListener('change', () => { bossToken.set(k.value.trim()); renderChat(); });
   const o = $('#bossOut'); if (o) o.addEventListener('click', e => { e.preventDefault(); bossToken.set(''); renderChat(); });
 }
