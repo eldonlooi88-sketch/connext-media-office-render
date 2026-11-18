@@ -1173,31 +1173,21 @@ function applyState(s) {
   if (s.btc && s.btc.usd) btc = Object.assign({}, s.btc, { demo: false });
   if (demoOn) return;
   drawBTC();
-  const ids = new Set(s.bots.map(x => x.id));
-  [...bots.keys()].forEach(id => { if (!ids.has(id)) removeBot(id); });
-  s.bots.forEach((x, i) => {
+  // Only update existing bots or add new ones, never remove local roster
+  (s.bots || []).forEach((x, i) => {
     let b = bots.get(x.id);
-    const d = { id: x.id, name: x.name, role: x.role, dept: x.dept, color: x.color || '#888', seat: x.seat, kind: x.kind, hair: x.hair, duty: x.duty };
+    const d = { id: x.id, name: x.name, role: x.role, dept: x.dept, color: x.color || '#888', seat: x.seat, kind: x.kind || 'casual', hair: x.hair, duty: x.duty };
     if (!seats[d.seat]) d.seat = freeDesk(d.id);
-    if (!b) b = addBot(d, i); else if (b.d.name !== d.name || b.d.role !== d.role) { Object.assign(b.d, d); updateLabelText(b); }
-    if (b.status !== x.status || b.task !== x.task || b.at !== (x.at || '')) setStatus(x.id, x.status, x.task, x.at, firstState);
+    if (!b) b = addBot(d, i);
+    else {
+      Object.assign(b.d, d);
+      updateLabelText(b);
+    }
+    if (b.status !== x.status || b.task !== x.task || b.at !== (x.at || '')) setStatus(x.id, x.status || 'idle', x.task || '', x.at, firstState);
   });
   projects.length = 0; (s.projects || []).forEach(p => projects.push(p));
   const active = projects.find(p => !['boss', 'report'].includes(p.stage)) || projects[0] || null;
   setFlowProject(active);
-  const atCourt = projects.find(p => p.stage === 'court') || (active && active.verdict ? active : null);
-  if (atCourt) {
-    court.title = atCourt.title; court.verdict = atCourt.verdict;
-    court.phase = atCourt.verdict ? '判决已宣读' : '审理中 · 检察官与辩护律师交锋';
-    court.votes = atCourt.verdict ? Array.from({ length: 12 }, (_, i) => i < atCourt.verdict.win ? 'win' : 'lose') : new Array(12).fill('hidden');
-    drawCourt();
-  }
-  projects.forEach(p => {
-    if (!p.verdict) return; const k = p.id + p.result;
-    if (!seenVerdicts.has(k)) { seenVerdicts.add(k); if (!firstState) { showVerdict(p.title, p.verdict); if (p.result === 'win') confetti({ x: 20, y: 0, z: 2 }, 160); } }
-    if (p.stage === 'boss' && p.result === 'win' && !seenVerdicts.has(k + 'boss')) { seenVerdicts.add(k + 'boss'); if (!firstState) confetti(seats.boss, 220); }
-  });
-  (s.events || []).slice().reverse().forEach(e => addFeed({ t: e.t, bot: e.bot, kind: e.kind, result: e.result, text: e.kind === 'status' ? `${e.who} · ${(ST[e.status] || ST.idle).t}${e.text ? '：' + e.text : ''}` : e.text }));
   firstState = false;
   renderAvatars(); if (activeTab === 'team') renderTeam();
 }
