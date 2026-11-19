@@ -1173,8 +1173,9 @@ function applyState(s) {
   if (s.btc && s.btc.usd) btc = Object.assign({}, s.btc, { demo: false });
   if (demoOn) return;
   drawBTC();
-  const ids = new Set(s.bots.map(x => x.id));
-  [...bots.keys()].forEach(id => { if (!ids.has(id)) removeBot(id); });
+  // keep local bots
+  // const ids = new Set(s.bots.map(x => x.id));
+  // [...bots.keys()].forEach(id => { if (!ids.has(id)) removeBot(id); });
   s.bots.forEach((x, i) => {
     let b = bots.get(x.id);
     const d = { id: x.id, name: x.name, role: x.role, dept: x.dept, color: x.color || '#888', seat: x.seat, kind: x.kind, hair: x.hair, duty: x.duty };
@@ -1591,6 +1592,7 @@ function demoBtcTick() {
 
 // ======================= 启动 =======================
 ROSTER.forEach((d, i) => addBot(d, i));
+console.log('Bots added:', bots.size);
 drawStatic(); drawCourt(); drawCooBoard(); drawBTC(); renderAvatars(); renderFeed();
 const hourKL = Number(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kuala_Lumpur', hour: 'numeric', hour12: false }));
 setNight(hourKL >= 19 || hourKL < 7);
