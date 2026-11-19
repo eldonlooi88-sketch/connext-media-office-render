@@ -44,7 +44,7 @@ app.get('/api/state', (req, res) => {
     events: data.events || [],
     stages: data.stages || [],
     btc: { usd: 95000, change24h: 1.2, history: [] },
-    chat: !!XAI_API_KEY
+    chat: true
   });
 });
 
