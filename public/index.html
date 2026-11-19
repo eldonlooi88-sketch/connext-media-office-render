@@ -553,7 +553,7 @@ select.b option{background:#1d2026}
 (function () {
 'use strict';
 const $ = s => document.querySelector(s);
-function fail(msg) { $('#loading').classList.add('off'); $('#errMsg').textContent = msg; $('#err').classList.add('on'); }
+function fail(msg) { console.log('FAIL:', msg); $('#loading').classList.add('off'); $('#errMsg').textContent = msg; $('#err').classList.add('on'); document.body.style.background='#111'; }
 if (!window.THREE || !THREE.OrbitControls) { fail('Three.js 载入失败，请检查网络后刷新。'); return; }
 try { main(); } catch (e) { console.error(e); fail('初始化出错：' + (e.message || String(e))); }
 
