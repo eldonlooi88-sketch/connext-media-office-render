@@ -8,6 +8,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const DATA_FILE = path.join(__dirname, 'data.json');
 const XAI_API_KEY = process.env.XAI_API_KEY || '';
+const DINGTALK_WEBHOOK = process.env.DINGTALK_WEBHOOK || '';
 
 function loadData() {
   try { return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); }
@@ -35,6 +36,36 @@ const defaultBots = [
   { id: 'defense', name: '辩护律师 Claude', role: '找出成功的最强理由', dept: '法庭', color: '#2b8a3e', seat: 'defense', status: 'idle', task: '' }
 ];
 
+const SYSTEM_PROMPT = `你是 Connext Media 的 COO Grok，负责调度整个 AI 带货影片团队。老板是 Eldon。用中文简洁、专业地回答。
+
+【重要：当前真实能力，必须遵守，禁止编造】
+1. 目前「不能」真正生成影片。系统还没有接上影片生成 API。
+2. 目前「没有」接钉钉。没有钉钉机器人、没有发群功能。
+3. 当老板要求生成影片、发钉钉、上传成片时，必须明确说明：
+   - 影片生成：还没接入，目前只能在演示模式里模拟流程，或先写脚本/分镜/文案。
+   - 钉钉：还没配置 Webhook，无法真正发消息到钉钉群。
+4. 绝对不要说「已经生成」「已经发到钉钉」「正在渲染中」等虚假完成状态。
+5. 可以帮忙：安排工作、写脚本大纲、文案、分镜建议、流程说明、审核建议。
+6. 团队流程（概念）：商品调查 → 脚本 → 设计 → 美术审核 → 法庭 → 影片生成 → 剪辑 → 文案 → 终审 → 老板。其中影片生成与钉钉通知尚未上线。`;
+
+async function sendDingTalk(text) {
+  if (!DINGTALK_WEBHOOK) return { ok: false, error: '未配置 DINGTALK_WEBHOOK' };
+  try {
+    const r = await fetch(DINGTALK_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        msgtype: 'text',
+        text: { content: text }
+      })
+    });
+    const j = await r.json().catch(() => ({}));
+    return { ok: r.ok && j.errcode === 0, result: j };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
 app.get('/api/state', (req, res) => {
   const data = loadData();
   res.json({
@@ -43,7 +74,8 @@ app.get('/api/state', (req, res) => {
     events: data.events || [],
     stages: data.stages || [],
     btc: { usd: 95000, change24h: 1.2, history: [] },
-    chat: !!XAI_API_KEY
+    chat: !!XAI_API_KEY,
+    dingtalk: !!DINGTALK_WEBHOOK
   });
 });
 
@@ -76,13 +108,10 @@ app.post('/api/chat', async (req, res) => {
       body: JSON.stringify({
         model: 'grok-4-1-fast-non-reasoning',
         messages: [
-          {
-            role: 'system',
-            content: '你是 Connext Media 的 COO Grok，负责调度整个 AI 带货影片团队。老板是 Eldon。用中文简洁、专业地回答工作安排、进度、提案等问题。'
-          },
+          { role: 'system', content: SYSTEM_PROMPT },
           ...messages.slice(-10)
         ],
-        temperature: 0.7,
+        temperature: 0.5,
         max_tokens: 800
       })
     });
@@ -98,5 +127,12 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
+// 钉钉测试 / 通知接口
+app.post('/api/dingtalk', async (req, res) => {
+  const text = (req.body && req.body.text) || 'Connext Media 办公室测试消息';
+  const result = await sendDingTalk('[Connext Media] ' + text);
+  res.json(result);
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log('Server running on', PORT, 'key set:', !!XAI_API_KEY));
+app.listen(PORT, () => console.log('Server on', PORT, 'key:', !!XAI_API_KEY, 'dingtalk:', !!DINGTALK_WEBHOOK));
