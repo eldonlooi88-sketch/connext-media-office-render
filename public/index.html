@@ -1442,7 +1442,7 @@ function renderChat() {
   $('#msgs').scrollTop = 1e9;
   $('#chips').innerHTML = hist.length ? '' : chipsFor(chatWith).map(t => `<button class="chip" type="button">${esc(t)}</button>`).join('');
   const eng = chatEngine(), n = $('#cnote');
-  if (eng === 'grok' && !bossToken.get()) n.innerHTML = '实时模式由 Grok 回复，只有老板能用。请输入老板密钥（管理员 Token），只保存在这个浏览器分页里。<input id="bossKey" type="password" autocomplete="off" placeholder="cx_…">';
+  if (eng === 'grok' && !bossToken.get()) n.innerHTML = '直接和 Grok（COO）对话，负责调度整个团队。<input id="bossKey" type="password" autocomplete="off" placeholder="cx_…">';
   else if (eng === 'grok') n.innerHTML = '由 Grok 回复 · <a href="#" id="bossOut" style="color:inherit">退出老板身份</a>';
   else if (eng === 'claude') n.textContent = '由 Claude 扮演这位成员回复（预览版）。部署到 Render 并设置 XAI_API_KEY 后改由 Grok 回复。';
   else n.textContent = live ? '服务器还没设置 XAI_API_KEY，暂时不能对话。' : '这个页面暂时不能对话：部署到 Render 并设置 XAI_API_KEY 后即可使用。';
@@ -1590,9 +1590,7 @@ function demoBtcTick() {
 }
 
 // ======================= 启动 =======================
-ROSTER.forEach((d, i) => { try { addBot(d, i); } catch(e){ console.error('addBot fail', d.id, e); } });
-console.log('Total bots created:', bots.size);
-setTimeout(() => console.log('Bots after 2s:', bots.size), 2000);
+ROSTER.forEach((d, i) => addBot(d, i));
 drawStatic(); drawCourt(); drawCooBoard(); drawBTC(); renderAvatars(); renderFeed();
 const hourKL = Number(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kuala_Lumpur', hour: 'numeric', hour12: false }));
 setNight(hourKL >= 19 || hourKL < 7);
