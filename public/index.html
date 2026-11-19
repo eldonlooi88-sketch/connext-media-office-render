@@ -1173,8 +1173,7 @@ function applyState(s) {
   if (s.btc && s.btc.usd) btc = Object.assign({}, s.btc, { demo: false });
   if (demoOn) return;
   drawBTC();
-  // NEVER remove local bots
-  // bots stay forever
+  // keep local bots always
   s.bots.forEach((x, i) => {
     let b = bots.get(x.id);
     const d = { id: x.id, name: x.name, role: x.role, dept: x.dept, color: x.color || '#888', seat: x.seat, kind: x.kind, hair: x.hair, duty: x.duty };
@@ -1405,7 +1404,7 @@ function getSample() {
   if (!window.claude || typeof window.claude.use !== 'function') { sampleFn = null; return Promise.resolve(null); }
   return window.claude.use('sample').then(f => (sampleFn = f || null)).catch(() => (sampleFn = null));
 }
-function chatEngine() { if (live && serverChat) return 'grok'; if (sampleFn) return 'claude'; return null; }
+function chatEngine() { if (live) return 'grok'; if (sampleFn) return 'claude'; return 'grok'; }
 function personaText(b) {
   const d = b.d;
   const team = [...bots.values()].filter(x => x.d.dept !== '法庭' || x.d.id === 'judge').map(x => `${x.d.name}:${(ST[x.status] || ST.idle).t}`).join('、');
@@ -1442,10 +1441,10 @@ function renderChat() {
   $('#msgs').scrollTop = 1e9;
   $('#chips').innerHTML = hist.length ? '' : chipsFor(chatWith).map(t => `<button class="chip" type="button">${esc(t)}</button>`).join('');
   const eng = chatEngine(), n = $('#cnote');
-  if (eng === 'grok' && !bossToken.get()) n.innerHTML = '实时模式由 Grok 回复，只有老板能用。请输入老板密钥（管理员 Token），只保存在这个浏览器分页里。<input id="bossKey" type="password" autocomplete="off" placeholder="cx_…">';
+  if (eng === 'grok' && !bossToken.get()) n.innerHTML = '和 Grok（COO）对话，直接输入即可<input id="bossKey" type="password" autocomplete="off" placeholder="cx_…">';
   else if (eng === 'grok') n.innerHTML = '由 Grok 回复 · <a href="#" id="bossOut" style="color:inherit">退出老板身份</a>';
   else if (eng === 'claude') n.textContent = '由 Claude 扮演这位成员回复（预览版）。部署到 Render 并设置 XAI_API_KEY 后改由 Grok 回复。';
-  else n.textContent = live ? '服务器还没设置 XAI_API_KEY，暂时不能对话。' : '这个页面暂时不能对话：部署到 Render 并设置 XAI_API_KEY 后即可使用。';
+  else n.textContent = '和 Grok（COO）对话，直接输入即可';
   const k = $('#bossKey'); if (k) k.addEventListener('change', () => { bossToken.set(k.value.trim()); renderChat(); });
   const o = $('#bossOut'); if (o) o.addEventListener('click', e => { e.preventDefault(); bossToken.set(''); renderChat(); });
 }
@@ -1600,10 +1599,10 @@ setTimeout(() => $('#loading').classList.add('off'), 300);
 setInterval(demoBtcTick, 4000); demoBtcTick();
 connect().then(ok => { if (!ok) live = false; setMode(); });
 setInterval(() => {
-  if (bots.size < 10) {
+  if (typeof bots !== 'undefined' && bots.size < 10 && typeof ROSTER !== 'undefined') {
     ROSTER.forEach((d, i) => { if (!bots.has(d.id)) try { addBot(d, i); } catch(e){} });
   }
-}, 3000);
+}, 2000);
 }
 })();
 </script>
